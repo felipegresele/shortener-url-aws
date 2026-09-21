@@ -1,5 +1,15 @@
-import { useState, FormEvent } from "react";
-import { API_REDIRECT_SHORTENER_URL, API_SHORTENER_URL } from "../schema/api";
+import { useState, useEffect, useRef, FormEvent } from "react";
+
+const COOLDOWN_SECONDS = 10;
+
+const SHORTENER_ENDPOINT = import.meta.env.VITE_SHORTENER_ENDPOINT;
+const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_BASE;
+
+if (!SHORTENER_ENDPOINT || !REDIRECT_BASE) {
+  console.error(
+    "Variáveis VITE_SHORTENER_ENDPOINT / VITE_REDIRECT_BASE não estão definidas."
+  );
+}
 
 const EXPIRATION_OPTIONS = [
   { label: "1 hora", value: "1" },
@@ -17,8 +27,29 @@ export function UrlShortener() {
   const [errorMessage, setErrorMessage] = useState("");
   const [shortCode, setShortCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const shortUrl = shortCode ? `${API_REDIRECT_SHORTENER_URL}${shortCode}` : "";
+  const shortUrl = shortCode ? `${REDIRECT_BASE}${shortCode}` : "";
+
+  // AJUSTE: contagem regressiva do cooldown, um tick por segundo
+  useEffect(() => {
+    if (cooldown <= 0) return;
+
+    intervalRef.current = setInterval(() => {
+      setCooldown((current) => {
+        if (current <= 1) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [cooldown]);
 
   function isValidUrl(value: string) {
     try {
@@ -32,6 +63,9 @@ export function UrlShortener() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
+    // AJUSTE: bloqueia envio enquanto o cooldown estiver ativo
+    if (cooldown > 0) return;
+
     if (!isValidUrl(originalUrl)) {
       setStatus("error");
       setErrorMessage("Cole uma URL válida, começando com http:// ou https://");
@@ -44,7 +78,7 @@ export function UrlShortener() {
     setCopied(false);
 
     try {
-      const response = await fetch(API_SHORTENER_URL, {
+      const response = await fetch(SHORTENER_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ originalUrl, expirationTime }),
@@ -69,6 +103,10 @@ export function UrlShortener() {
           ? error.message
           : "Não foi possível encurtar essa URL. Tenta de novo."
       );
+    } finally {
+      // AJUSTE: cooldown começa depois da resposta, com sucesso ou erro,
+      // pra evitar clique repetido enquanto a lambda ainda está processando
+      setCooldown(COOLDOWN_SECONDS);
     }
   }
 
@@ -138,10 +176,14 @@ export function UrlShortener() {
 
           <button
             type="submit"
-            disabled={status === "loading"}
+            disabled={status === "loading" || cooldown > 0}
             className="w-full rounded-lg bg-amber-400 text-[#0B1220] font-medium py-3 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {status === "loading" ? "Encurtando..." : "Encurtar URL"}
+            {status === "loading"
+              ? "Encurtando..."
+              : cooldown > 0
+              ? `Aguarde ${cooldown}s`
+              : "Encurtar URL"}
           </button>
 
           {status === "error" && (

@@ -14,6 +14,8 @@ dist-ssr
 
 src/schema/api.ts
 
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
