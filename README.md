@@ -8,7 +8,7 @@ Projeto de estudo focado em praticar arquitetura serverless na AWS, sem servidor
 
 ## 🖼️ Arquitetura
 
-![Arquitetura do projeto](docs/architecture.png)
+<img width="830" height="358" alt="image" src="https://github.com/user-attachments/assets/63cc4fb6-932e-4931-8372-031fc289a799" />
 
 O fluxo é dividido em duas lambdas independentes, cada uma publicada como um projeto Java separado e empacotada em seu próprio `.jar`:
 
@@ -18,9 +18,6 @@ O fluxo é dividido em duas lambdas independentes, cada uma publicada como um pr
 Cada registro de URL é salvo como um arquivo `.json` no bucket, usando o código curto como chave (ex: `a1b2c3d4.json`).
 
 > No diagrama a entrada é representada por uma camada de API genérica; na implementação atual, cada Lambda é exposta diretamente via **Lambda Function URL**, sem API Gateway.
->
-> <img width="830" height="358" alt="image" src="https://github.com/user-attachments/assets/63cc4fb6-932e-4931-8372-031fc289a799" />
-
 ---
 
 ## ⚙️ Como funciona
@@ -113,7 +110,3 @@ frontend/                    # Interface web (React + Tailwind)
 - Testes unitários (JUnit + Mockito) para os handlers.
 
 ---
-
-## 📄 Licença
-
-Projeto de estudo, livre para uso e adaptação.
