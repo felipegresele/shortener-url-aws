@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { SubmitEvent } from "react";
 
 const COOLDOWN_SECONDS = 10;
 
@@ -6,6 +7,8 @@ const SHORTENER_ENDPOINT = import.meta.env.VITE_SHORTENER_ENDPOINT;
 const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_BASE;
 
 if (!SHORTENER_ENDPOINT || !REDIRECT_BASE) {
+  // AJUSTE: erro explícito no console caso as env vars não estejam configuradas
+  // (esquecimento do .env local, ou não configuradas no painel da Vercel)
   console.error(
     "Variáveis VITE_SHORTENER_ENDPOINT / VITE_REDIRECT_BASE não estão definidas."
   );
@@ -60,7 +63,7 @@ export function UrlShortener() {
     }
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     // AJUSTE: bloqueia envio enquanto o cooldown estiver ativo
